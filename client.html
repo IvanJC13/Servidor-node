@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Grupal WebSocket</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat"></div>
+        <div id="input-container">
+            <input type="text" id="messageInput" placeholder="Escribe tu mensaje...">
+            <button id="sendButton">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8080');
+        const usuario = prompt('Ingresa tu nombre de usuario:');
+        window.localStorage.setItem('usuario', usuario);
+
+        socket.addEventListener('message', function(event) {
+            const chatDiv = document.getElementById('chat');
+            const messageParagraph = document.createElement('div');
+            messageParagraph.classList.add('message');
+
+            const data = JSON.parse(event.data);
+            if (data.usuario === usuario) {
+                messageParagraph.classList.add('outgoing');
+            }
+
+            messageParagraph.textContent = `${data.usuario}: ${data.mensaje}`;
+            chatDiv.appendChild(messageParagraph);
+        });
+
+        document.getElementById('sendButton').addEventListener('click', function() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+
+            if (message.trim() !== '') {
+                const messageData = {
+                    usuario: usuario,
+                    mensaje: message
+                };
+
+                // Mostrar el mensaje enviado en el chat local
+                const chatDiv = document.getElementById('chat');
+                const messageParagraph = document.createElement('div');
+                messageParagraph.classList.add('message', 'outgoing');
+                messageParagraph.textContent = `${usuario}: ${message}`;
+                chatDiv.appendChild(messageParagraph);
+
+                socket.send(JSON.stringify(messageData));
+                messageInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
